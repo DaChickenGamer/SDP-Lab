@@ -25,6 +25,14 @@ player_sprite = 27;
 door_sprite = 9*32 + 11;
 empty_room_sprite = 17;
 
+% Create sprite dictionary using the correct format
+texture_name = ["blank", "sword", "boots", "shield", "potion", "monster", "player", "door", "empty_room"];
+texture_position = [blank_sprite, sword_sprite, boots_sprite, shield_sprite, potion_sprite, monster_sprite, player_sprite, door_sprite, empty_room_sprite];
+
+sprite_dictionary = dictionary(texture_name, texture_position);
+
+fprintf("Potion sprite index: %d\n", sprite_dictionary("potion"));
+
 %% Initalize Board
 % Display empty board   
 rooms_display = empty_room_sprite * ones(10,10);
@@ -32,7 +40,7 @@ drawScene(my_scene,rooms_display)
 
 % Now set up A second layer with the game pieces
 gameboard_display = blank_sprite * ones(10,10);
-gameboard_display(10,10) = door_sprite;
+gameboard_display(10,10) = sprite_dictionary("door");
 gameboard_display(5,5) = sword_sprite;
 gameboard_display(3,4) = shield_sprite;
 gameboard_display(6,9) = boots_sprite;
@@ -42,7 +50,7 @@ gameboard_display(3,7) = monster_sprite;
 gameboard_display(8,8) = monster_sprite;
 gameboard_display(7,3) = monster_sprite;
 
-drawScene(my_scene,rooms_display,gameboard_display)
+drawScene(my_scene,rooms_display,gameboard_display.)
 
 %% Initalize Player
 player = player(player_sprite, 2, 2, my_scene, rooms_display, gameboard_display);
