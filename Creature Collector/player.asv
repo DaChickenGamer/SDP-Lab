@@ -23,8 +23,8 @@ classdef player < handle
             player_obj.scene = scene;
             player_obj.rooms_display = rooms_display;
             player_obj.gameboard_display = gameboard_display;
-            player_obj.last_floor_sprite;
-            player_obj.player_sprite = 27;
+            player_obj.last_floor_sprite = 0;
+            player_obj.player_sprite = 26;
         end
 
         %% Function to Move Player
@@ -53,12 +53,17 @@ classdef player < handle
         end
         
         % Update player position
-        function update_position(player_obj, new_x, new_y, current_floor_sprite)
+        function update_position(player_obj, new_x, new_y)
             % Could not hardset in future more flexability but it's fine
             % for now
-            player_obj.last_floor_sprite = current_floor_sprite;
 
-            player_obj.gameboard_display(player_obj.y, player_obj.x) = blank_sprite;
+            if player_obj.last_floor_sprite <= 0
+                player_obj.last_floor_sprite = 1;
+            end
+
+
+            player_obj.gameboard_display(player_obj.y, player_obj.x) = player_obj.last_floor_sprite;
+            player_obj.last_floor_sprite = player_obj.gameboard_display(new_y, new_x);
             player_obj.gameboard_display(new_y, new_x) = player_obj.player_sprite;
 
             drawScene(player_obj.scene, player_obj.rooms_display, player_obj.gameboard_display)
