@@ -86,7 +86,7 @@ drawScene(my_scene,rooms_display,gameboard_display)
 player = player(player_sprite, 2, 2, my_scene, rooms_display, gameboard_display);
 player.initalize_character()
 
-my_scene.make_ui_test();
+my_scene.showCreaturePopup(randTest.name, randTest.creature_texture);
 %% Update Loop
 
 while gameRunning
