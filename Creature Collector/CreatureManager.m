@@ -11,8 +11,7 @@ classdef CreatureManager < handle
 
         end
 
-        function random_creature = roll_creature(obj)
-            creatures = obj.creature_list;
+        function random_creature = roll_creature(obj, creatures)
             weights = zeros(1, length(creatures));
         
             % Assign weights based on rarity
@@ -51,9 +50,17 @@ classdef CreatureManager < handle
             end
         end
 
-        function make_creature(obj, name, rarity, texture)
-            new_creature = Creature(name, rarity, texture);
+        function make_creature(obj, name, rarity, set, texture)
+            new_creature = Creature(name, rarity, set, texture);
             obj.creature_list(end + 1) = new_creature;
+        end
+
+        function sortedCreatures = getCreaturesSortedByRarity(creatureList)
+
+        end
+
+        function sortedCreatures = getCreaturesOfSet(obj, set)
+            
         end
     end
 end

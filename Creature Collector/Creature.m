@@ -5,13 +5,15 @@ classdef Creature
     properties
        name;
        rarity;
+       set;
        creature_texture;
     end
     
     methods
-        function obj = Creature(name, rarity, creature_texture)
+        function obj = Creature(name, rarity, set, creature_texture)
             obj.name = name;
             obj.rarity = rarity;
+            obj.set = set;
             obj.creature_texture = creature_texture;
         end
     end
