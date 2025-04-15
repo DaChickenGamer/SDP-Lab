@@ -59,10 +59,6 @@ creature_manager.make_creature("Knight", Rarities.Rare, Set.Medieval, 0*32+28)
 creature_manager.make_creature("Gnome", Rarities.Legendary, Set.Funny, 9*32+27)
 creature_manager.make_creature("Mermaid", Rarities.Epic, Set.Water, 9*32+32)
 
-% Test to see if the creature roll works
-%randTest = creature_manager.roll_creature(creature_manager.creature_list);
-%fprintf("Random creature name: %s", randTest.name);
-
 %% Build Board
 
 % Define layers
@@ -155,8 +151,13 @@ drawScene(my_scene, terrarian_layer, object_layer, building_layer);
 player = player(player_sprite, 2, 2, my_scene, {terrarian_layer, object_layer, building_layer});
 player.initalize_character()
 
-%my_scene.showCreaturePopup(randTest.name, randTest.creature_texture);
-%% Update Loop
+
+% Test to see if the creature roll works
+randTest = creature_manager.roll_creature(creature_manager.creature_list);
+% Display random creature name
+fprintf("Random creature name: %s", randTest.name);
+
+my_scene.uiPopup(randTest.name, "Catch", my_scene.sprites{randTest.creature_texture})
 
 while gameRunning
     player.move();

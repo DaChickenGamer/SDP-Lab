@@ -1,32 +1,9 @@
-% The Simple Game Engine is a class from object-oriented programming.
-% If you are unfamiliar with object oriented programming, here is a quick
-% crash course:
-%
-% Classes are a higher level of organizing programs beyond functions, they
-% group together the functions (called methods) and variables (properties)
-% of whatever it is you are trying to do. When you make a variable (called
-% an object) from a class, it has all the properties from that class
-% bundled together. This mimics how we naturally categorize things in real
-% life. For example, cats are a class of animals, methods are the things a
-% cat can do (e.g. pounce, meow, etc), properties describe a cat (e.g.
-% color, age, location, etc), and objects  are individual cats (where each
-% of the properties has a set value).
-%
-% The one extra bit of syntax you need to understand what's going on below
-% is how to access properties of an object:
-% Property "prop" of object "obj" is "obj.prop"
-
-% The simpleGameEngine class inherets from the handle class because we
-% want the game objects to be updated by their methods, specifically
-% my_figure and my_image
 classdef simpleGameEngine < handle
     properties
         sprites = {}; % color data of the sprites
         sprites_transparency = {}; % transparency data of the sprites
         sprite_width = 0;
         sprite_height = 0;
-        screen_size = 0; % the size of the playable screen
-        layers = [];
         background_color = [0, 0, 0];
         zoom = 1;
         my_figure; % figure identifier
@@ -34,7 +11,7 @@ classdef simpleGameEngine < handle
     end
     
     methods
-        function obj = simpleGameEngine(sprites_fname, sprite_height, sprite_width, zoom, background_color, screen_size)
+        function obj = simpleGameEngine(sprites_fname, sprite_height, sprite_width, zoom, background_color)
             % simpleGameEngine
             % Input: 
             %  1. File name of sprite sheet as a character array
@@ -43,12 +20,8 @@ classdef simpleGameEngine < handle
             %  4. (Optional) Zoom factor to multiply image by in final figure (Default: 1)
             %  5. (Optional) Background color in RGB format as a 3 element vector (Default: [0,0,0] i.e. black)
             % Output: an SGE scene variable
-            % Note: In RGB format, colors are specified as a mixture of red, green, and blue on a scale of 0 to 255. [0,0,0] is black, [255,255,255] is white, [255,0,0] is red, etc.
-            % Example:
-            %     	my_scene = simpleGameEngine('tictactoe.png',16,16,5,[0,150,0]);
             
             % load the input data into the object
-            obj.screen_size = screen_size;
             obj.sprite_width = sprite_width;
             obj.sprite_height = sprite_height;
             if nargin > 4
@@ -91,161 +64,66 @@ classdef simpleGameEngine < handle
             end
         end
 
-        function drawLayer(obj, sprites, layer)
-            scene_size = size(sprites);
-            
-            % Check to make sure the sprite is the right size
-            if ~isequal(scene_size, obj.screen_size)
-                error("Layer %f is not the same size as screen", layer);
-            end
-
-            num_rows = scene_size(1);
-            num_cols = scene_size(2);
-            
-            obj.layers[layer] = sprites
-
-            % loop over the rows and colums of the tiles in the scene to
-            % draw the sprites in the correct locations
-            for tile_row=1:num_rows
-                for tile_col=1:num_cols
-                    
-                    % Save the id of the current sprite(s) to make things
-                    % easier to read later
-                    sprite_id = sprites(tile_row,tile_col);
-                    
-                    % Build the tile layer by layer, starting with the
-                    % background color
-                    tile_data = zeros(obj.sprite_height,obj.sprite_width,3,'uint8');
-                        
-                    for rgb_idx = 1:3
-                        tile_data(:, :, rgb_idx) = obj.background_color(rgb_idx);
-                    end
-
-                    % Layer on the first sprite. Note that the tranparency
-                    % data also ranges from 0 (transparent) to 255
-                    % (visible)
-                    tile_data = obj.sprites{bg_sprite_id} .* (obj.sprites_transparency{bg_sprite_id}/255) + ...
-                        tile_data .* ((255-obj.sprites_transparency{bg_sprite_id})/255);
-                    
-                    % If needed, layer on the second sprite
-                    if nargin > 2
-                        tile_data = obj.sprites{fg_sprite_id} .* (obj.sprites_transparency{fg_sprite_id}/255) + ...
-                            tile_data .* ((255-obj.sprites_transparency{fg_sprite_id})/255);
-                    end
-                    
-                    % Calculate the pixel location of the top-left corner
-                    % of the tile
-                    rmin = obj.sprite_height*(tile_row-1);
-                    cmin = obj.sprite_width*(tile_col-1);
-                    
-                    % Write the tile to the scene_data array
-                    scene_data(rmin+1:rmin+obj.sprite_height,cmin+1:cmin+obj.sprite_width,:)=tile_data;
-                end
-            end
-        end
-
-        function redrawScene(obj, sprites, layers[])
-    
-        end
+        function drawScene(obj, varargin)
+            % drawScene
+            % Input: an arbitrary number of sprite ID matrices
+            % Each argument after obj is a layer matrix of the same size
+            % Layers are drawn from bottom to top
         
-        function drawScene(obj, background_sprites, foreground_sprites)
-            % draw_scene 
-            % Input: 
-            %  1. an SGE scene, which gains focus
-            %  2. A matrix of sprite IDs, the arrangement of the sprites in the figure will be the same as in this matrix
-            %  3. (Optional) A second matrix of sprite IDs of the same size as the first. These sprites will be layered on top of the first set.
-            % Output: None
-            % Example: The following will create a figure with 3 rows and 3 columns of sprites
-            %     	drawScene(my_scene, [4,5,6;7,8,9;10,11,12], [1,1,1;1,2,1;1,1,1]);
-            
-            scene_size = size(background_sprites);
-            
-            % Error checking: make sure the bg and fg are the same size
-            if nargin > 2
-                if ~isequal(scene_size, size(foreground_sprites))
-                    error('Background and foreground matrices of scene must be the same size.')
+            num_layers = length(varargin);
+            if num_layers < 1
+                error('At least one layer must be provided.');
+            end
+        
+            % Check that all layers have the same size
+            scene_size = size(varargin{1});
+            for i = 2:num_layers
+                if ~isequal(scene_size, size(varargin{i}))
+                    error('All layers must have the same size.');
                 end
             end
-            
+        
             num_rows = scene_size(1);
             num_cols = scene_size(2);
-            
-            % initialize the scene_data array to the correct size and type
+        
+            % initialize the scene_data array
             scene_data = zeros(obj.sprite_height*num_rows, obj.sprite_width*num_cols, 3, 'uint8');
-            
-            % loop over the rows and colums of the tiles in the scene to
-            % draw the sprites in the correct locations
-            for tile_row=1:num_rows
-                for tile_col=1:num_cols
-                    
-                    % Save the id of the current sprite(s) to make things
-                    % easier to read later
-                    bg_sprite_id = background_sprites(tile_row,tile_col);
-                    if nargin > 2
-                        fg_sprite_id = foreground_sprites(tile_row,tile_col);
-                    end
-                    
-                    % Build the tile layer by layer, starting with the
-                    % background color
-                    tile_data = zeros(obj.sprite_height,obj.sprite_width,3,'uint8');
-                        
+        
+            for tile_row = 1:num_rows
+                for tile_col = 1:num_cols
+                    % Start with a blank tile of background color
+                    tile_data = zeros(obj.sprite_height, obj.sprite_width, 3, 'uint8');
                     for rgb_idx = 1:3
-                        tile_data(:, :, rgb_idx) = obj.background_color(rgb_idx);
+                        tile_data(:,:,rgb_idx) = obj.background_color(rgb_idx);
                     end
-
-                    % Layer on the first sprite. Note that the tranparency
-                    % data also ranges from 0 (transparent) to 255
-                    % (visible)
-                    tile_data = obj.sprites{bg_sprite_id} .* (obj.sprites_transparency{bg_sprite_id}/255) + ...
-                        tile_data .* ((255-obj.sprites_transparency{bg_sprite_id})/255);
-                    
-                    % If needed, layer on the second sprite
-                    if nargin > 2
-                        tile_data = obj.sprites{fg_sprite_id} .* (obj.sprites_transparency{fg_sprite_id}/255) + ...
-                            tile_data .* ((255-obj.sprites_transparency{fg_sprite_id})/255);
+        
+                    % Apply each layer in order
+                    for layer_idx = 1:num_layers
+                        sprite_id = varargin{layer_idx}(tile_row, tile_col);
+                        if sprite_id ~= 0
+                            sprite = obj.sprites{sprite_id};
+                            trans = obj.sprites_transparency{sprite_id};
+                            tile_data = sprite .* (trans / 255) + ...
+                                        tile_data .* ((255 - trans) / 255);
+                        end
                     end
-                    
-                    % Calculate the pixel location of the top-left corner
-                    % of the tile
-                    rmin = obj.sprite_height*(tile_row-1);
-                    cmin = obj.sprite_width*(tile_col-1);
-                    
-                    % Write the tile to the scene_data array
-                    scene_data(rmin+1:rmin+obj.sprite_height,cmin+1:cmin+obj.sprite_width,:)=tile_data;
+        
+                    % Determine where to put this tile in the scene
+                    rmin = obj.sprite_height * (tile_row - 1);
+                    cmin = obj.sprite_width * (tile_col - 1);
+                    scene_data(rmin+1:rmin+obj.sprite_height, cmin+1:cmin+obj.sprite_width, :) = tile_data;
                 end
             end
-            
-            % handle zooming
-            big_scene_data = imresize(scene_data,obj.zoom,'nearest');
-            
-            % This part is a bit tricky, but avoids some latency, the idea
-            % is that we only want to completely create a new figure if we
-            % absolutely have to: the first time the figure is created,
-            % when the old figure has been closed, or if the scene is
-            % resized. Otherwise, we just update the image data in the
-            % current image, which is much faster.
+        
+            % If figure doesn't exist, create it
             if isempty(obj.my_figure) || ~isvalid(obj.my_figure)
-                % inititalize figure
                 obj.my_figure = figure();
-                
-                % set guidata to the  key press and release functions,
-                % this allows keeping track of what key has been pressed
-                obj.my_figure.KeyPressFcn = @(src,event)guidata(src,event.Key);
-                obj.my_figure.KeyReleaseFcn = @(src,event)guidata(src,0);
-                
-                % actually display the image to the figure
-                obj.my_image = imshow(big_scene_data,'InitialMagnification', 100);
-                
-            elseif isempty(obj.my_image)  || ~isprop(obj.my_image, 'CData') || ~isequal(size(big_scene_data), size(obj.my_image.CData))
-                % Re-display the image if its size changed
-                figure(obj.my_figure);
-                obj.my_image = imshow(big_scene_data,'InitialMagnification', 100);
+                obj.my_image = imshow(scene_data, 'InitialMagnification', obj.zoom * 100);
             else
-                % otherwise just update the image data
-                obj.my_image.CData = big_scene_data;
+                set(obj.my_image, 'CData', scene_data);
             end
         end
-        
+
         function key = getKeyboardInput(obj)
             % getKeyboardInput
             % Input: an SGE scene, which gains focus
@@ -315,36 +193,56 @@ classdef simpleGameEngine < handle
             end
         end
 
-        function showCreaturePopup(obj, creatureName, texture)
-            % Create a new figure for the popup
-            popupFig = figure('Name', 'A Wild Creature Appears!', ...
-                              'NumberTitle', 'off', ...
-                              'MenuBar', 'none', ...
-                              'ToolBar', 'none', ...
-                              'Color', [1 1 1], ...
-                              'Position', [600, 400, 300, 300]);
-            
-            % Display the sprite image (assumed to be a 3D RGB array)
-            axes('Parent', popupFig, 'Position', [0.1 0.3 0.8 0.6]);
-            imshow(obj.sprites{texture});
+        function uiPopup(obj, titleText, buttonLabel, imageData)
+            % A popup that contains a title, button, and image
         
-            % Display the creature's name
-            uicontrol('Style', 'text', ...
-                      'String', creatureName, ...
-                      'FontSize', 14, ...
-                      'FontWeight', 'bold', ...
-                      'BackgroundColor', [1 1 1], ...
-                      'ForegroundColor', [0 0 0], ...
-                      'Units', 'normalized', ...
-                      'Position', [0.1 0.1 0.8 0.1]);
-            
-            % Create the "Capture" button at the bottom
-            uicontrol('Style', 'pushbutton', ...
-                      'String', 'Capture', ...
-                      'FontSize', 12, ...
-                      'Units', 'normalized', ...
-                      'Position', [0.35 0.02 0.3 0.1], ...
-                      'Callback', @(src, event) close(popupFig));  % Close popup on click
+            % Callback function to close the UI panel and resume the game
+            function resumeGame(~, ~)
+                % Remove only the overlay panel, not the whole UI
+                delete(overlayPanel);
+            end
+
+            screenSize = get(0, 'ScreenSize');
+            panelWidth = screenSize(3);
+            panelHeight = screenSize(4); 
+
+            % Main overlay panel
+            overlayPanel = uipanel('Parent', obj.my_figure, ...
+                'Units', 'normalized', ...
+                'Position', [0 0 1 1], ...
+                'BackgroundColor', [0 0 0 0.6], ...
+                'Tag', 'gameUI', ...
+                'BorderType', 'none', ...
+                'BorderWidth', 0);
+        
+            % Title label
+            uicontrol('Parent', overlayPanel, ...
+                'Style', 'text', ...
+                'String', titleText, ...
+                'Units', 'normalized', ...
+                'Position', [0.25 0.75 0.5 0.1], ...  
+                'FontSize', 18, ... 
+                'FontWeight', 'bold', ...
+                'BackgroundColor', [0 0 0 0], ...  
+                'ForegroundColor', [1 1 1], ...  
+                'HorizontalAlignment', 'center');
+        
+            % Image (using uiimage)
+            uiimage('Parent', overlayPanel, ...
+                'ImageSource', imageData, ...
+                'Position', [300, 300, 300, 300]);
+
+            % Resume button
+            uicontrol('Parent', overlayPanel, ...
+                'Style', 'pushbutton', ...
+                'String', buttonLabel, ...
+                'Units', 'normalized', ...
+                'Position', [0.45 0.25 0.1 0.08], ...
+                'Callback', @resumeGame, ...
+                'FontSize', 14, ...  
+                'BackgroundColor', [0.2 0.8 0.2], ...  
+                'ForegroundColor', [1 1 1], ... 
+                'FontWeight', 'bold');
         end
     end
 end

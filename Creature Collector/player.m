@@ -34,13 +34,13 @@ classdef player < handle
             new_y = player_obj.y;
 
             try
-                if k == 'w'
+                if k == 'w'  && player_obj.y - 1 > 0
                     new_y = player_obj.y - 1;
-                elseif k == 's'
+                elseif k == 's' && player_obj.y + 1 < 21
                     new_y = player_obj.y + 1;
-                elseif k == 'a'
+                elseif k == 'a' && player_obj.x - 1 > 0
                     new_x = player_obj.x - 1;
-                elseif k == 'd'
+                elseif k == 'd' && player_obj.x + 1 < 21
                     new_x = player_obj.x + 1;
                 end
             catch
@@ -58,7 +58,7 @@ classdef player < handle
             if player_obj.last_floor_sprite <= 0
                 player_obj.last_floor_sprite = 1;
             end
-
+        
             player_obj.layers{2}(player_obj.y, player_obj.x) = player_obj.last_floor_sprite;
 
             player_obj.last_floor_sprite = player_obj.layers{2}(new_y, new_x);
