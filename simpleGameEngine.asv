@@ -25,6 +25,8 @@ classdef simpleGameEngine < handle
         sprites_transparency = {}; % transparency data of the sprites
         sprite_width = 0;
         sprite_height = 0;
+        screen_size = 0; % the size of the playable screen
+        layers = [];
         background_color = [0, 0, 0];
         zoom = 1;
         my_figure; % figure identifier
@@ -32,7 +34,7 @@ classdef simpleGameEngine < handle
     end
     
     methods
-        function obj = simpleGameEngine(sprites_fname, sprite_height, sprite_width, zoom, background_color)
+        function obj = simpleGameEngine(sprites_fname, sprite_height, sprite_width, zoom, background_color, screen_size)
             % simpleGameEngine
             % Input: 
             %  1. File name of sprite sheet as a character array
@@ -46,6 +48,7 @@ classdef simpleGameEngine < handle
             %     	my_scene = simpleGameEngine('tictactoe.png',16,16,5,[0,150,0]);
             
             % load the input data into the object
+            obj.screen_size = screen_size;
             obj.sprite_width = sprite_width;
             obj.sprite_height = sprite_height;
             if nargin > 4
@@ -86,6 +89,63 @@ classdef simpleGameEngine < handle
                     obj.sprites_transparency{end+1} = transparency(r_min:r_max,c_min:c_max,:);
                 end
             end
+        end
+
+        function drawLayer(obj, sprites, layer)
+            scene_size = size(sprites);
+            
+            % Check to make sure the sprite is the right size
+            if ~isequal(scene_size, obj.screen_size)
+                error("Layer %f is not the same size as screen", layer);
+            end
+
+            num_rows = scene_size(1);
+            num_cols = scene_size(2);
+            
+            obj.layers[layer] = sprites
+
+            % loop over the rows and colums of the tiles in the scene to
+            % draw the sprites in the correct locations
+            for tile_row=1:num_rows
+                for tile_col=1:num_cols
+                    
+                    % Save the id of the current sprite(s) to make things
+                    % easier to read later
+                    sprite_id = sprites(tile_row,tile_col);
+                    
+                    % Build the tile layer by layer, starting with the
+                    % background color
+                    tile_data = zeros(obj.sprite_height,obj.sprite_width,3,'uint8');
+                        
+                    for rgb_idx = 1:3
+                        tile_data(:, :, rgb_idx) = obj.background_color(rgb_idx);
+                    end
+
+                    % Layer on the first sprite. Note that the tranparency
+                    % data also ranges from 0 (transparent) to 255
+                    % (visible)
+                    tile_data = obj.sprites{bg_sprite_id} .* (obj.sprites_transparency{bg_sprite_id}/255) + ...
+                        tile_data .* ((255-obj.sprites_transparency{bg_sprite_id})/255);
+                    
+                    % If needed, layer on the second sprite
+                    if nargin > 2
+                        tile_data = obj.sprites{fg_sprite_id} .* (obj.sprites_transparency{fg_sprite_id}/255) + ...
+                            tile_data .* ((255-obj.sprites_transparency{fg_sprite_id})/255);
+                    end
+                    
+                    % Calculate the pixel location of the top-left corner
+                    % of the tile
+                    rmin = obj.sprite_height*(tile_row-1);
+                    cmin = obj.sprite_width*(tile_col-1);
+                    
+                    % Write the tile to the scene_data array
+                    scene_data(rmin+1:rmin+obj.sprite_height,cmin+1:cmin+obj.sprite_width,:)=tile_data;
+                end
+            end
+        end
+
+        function redrawScene(obj, sprites, layers[])
+    
         end
         
         function drawScene(obj, background_sprites, foreground_sprites)
@@ -128,10 +188,11 @@ classdef simpleGameEngine < handle
                     % Build the tile layer by layer, starting with the
                     % background color
                     tile_data = zeros(obj.sprite_height,obj.sprite_width,3,'uint8');
+                        
                     for rgb_idx = 1:3
-                        tile_data(:,:,rgb_idx) = obj.background_color(rgb_idx);
+                        tile_data(:, :, rgb_idx) = obj.background_color(rgb_idx);
                     end
-                    
+
                     % Layer on the first sprite. Note that the tranparency
                     % data also ranges from 0 (transparent) to 255
                     % (visible)
@@ -253,17 +314,6 @@ classdef simpleGameEngine < handle
                 col = max_col;
             end
         end
-        
-        function make_ui_test(obj)
-            % Assuming obj.my_figure is a regular figure created using figure()
-            % Create a button using uicontrol
-            btnX = 50;
-            btnY = 50;
-            btnWidth = 100;
-            btnHeight = 22;
-            btn = uicontrol(obj.my_figure, 'Style', 'pushbutton', 'String', 'Submit Changes', ...
-                'Position', [btnX btnY btnWidth btnHeight]);
-        end
 
         function showCreaturePopup(obj, creatureName, texture)
             % Create a new figure for the popup
@@ -273,11 +323,10 @@ classdef simpleGameEngine < handle
                               'ToolBar', 'none', ...
                               'Color', [1 1 1], ...
                               'Position', [600, 400, 300, 300]);
-        
+            
             % Display the sprite image (assumed to be a 3D RGB array)
             axes('Parent', popupFig, 'Position', [0.1 0.3 0.8 0.6]);
-            fprintf("Texture ID: %f"texture)
-            imshow(obj.sprites(texture));
+            imshow(obj.sprites{texture});
         
             % Display the creature's name
             uicontrol('Style', 'text', ...
@@ -288,10 +337,14 @@ classdef simpleGameEngine < handle
                       'ForegroundColor', [0 0 0], ...
                       'Units', 'normalized', ...
                       'Position', [0.1 0.1 0.8 0.1]);
-        
-            % Auto close after 3 seconds
-            pause(3);
-            close(popupFig);
+            
+            % Create the "Capture" button at the bottom
+            uicontrol('Style', 'pushbutton', ...
+                      'String', 'Capture', ...
+                      'FontSize', 12, ...
+                      'Units', 'normalized', ...
+                      'Position', [0.35 0.02 0.3 0.1], ...
+                      'Callback', @(src, event) close(popupFig));  % Close popup on click
         end
     end
 end

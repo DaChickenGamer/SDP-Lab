@@ -63,15 +63,40 @@ creature_manager.make_creature("Mermaid", Rarities.Epic, Set.Water, 9*32+32)
 %randTest = creature_manager.roll_creature(creature_manager.creature_list);
 %fprintf("Random creature name: %s", randTest.name);
 
-%% Initalize Board
-% Display empty board   
-rooms_display = blank_sprite * ones(20,20);
-drawScene(my_scene,rooms_display)
+%% Build Board
+
+% Define layers
+terrarian_layer = blank_sprite * ones(20, 20);
+building_layer = blank_sprite * ones(20,20);
+object_layer = ones(20, 20);
 
 % Now set up A second layer with the game pieces
-gameboard_display = ones(20, 20);
+object_layer = ones(20, 20);
 
-%% Initalize Buildings
+% Water Region
+fullWater = 5 * 32 + 9;
+rightEdgeWater = 5 * 32 + 10;
+upEdgeWater = 32 * 32 + 1;
+cornerWater = 5 * 32 + 11;
+
+terrarian_layer(15, 15) = fullWater;
+
+for x = 1:6
+    for y = 1:6
+        currentX = x + 14;
+        currentY = y + 14;
+
+        if (currentX == 15 && currentY ~= 15)
+            terrarian_layer(currentY, currentX) = rightEdgeWater;
+        elseif(currentY == 15 && currentX ~= 15)
+            terrarian_layer(currentY, currentX) = upEdgeWater;
+        elseif(currentY == 15 && currentX == 15)
+            terrarian_layer(currentY, currentX) = cornerWater;
+        else
+            terrarian_layer(currentY, currentX) = fullWater;
+        end
+    end
+end
 
 % Define buildings
 castle = Building();
@@ -82,7 +107,7 @@ candle = Building();
 house = Building();
 fence = Building();
 
-% Set Sprites
+% Set Sprite Sets
 castle.setBuildingSet(Set.Medieval);
 grave.setBuildingSet(Set.Dead);
 boat.setBuildingSet(Set.Water);
@@ -101,31 +126,33 @@ house.setBuildingCoordinates(5, 12);
 fence.setBuildingCoordinates(12, 5);
 
 % Place Buildings
-rooms_display(castle.y, castle.x) = castle.sprite;
-rooms_display(grave.y, grave.x) = grave.sprite;
-rooms_display(boat.y, boat.x) = boat.sprite;
-rooms_display(shrine.y, shrine.x) = shrine.sprite;
-rooms_display(candle.y, candle.x) = candle.sprite;
-rooms_display(house.y, house.x) = house.sprite;
-rooms_display(fence.y, fence.x) = fence.sprite;
+building_layer(castle.y, castle.x) = castle.sprite;
+building_layer(grave.y, grave.x) = grave.sprite;
+building_layer(boat.y, boat.x) = boat.sprite;
+building_layer(shrine.y, shrine.x) = shrine.sprite;
+building_layer(candle.y, candle.x) = candle.sprite;
+building_layer(house.y, house.x) = house.sprite;
+building_layer(fence.y, fence.x) = fence.sprite;
+
+% Grass Generation
 
 for x = 1:20
     for y = 1:20
         randomNum = randi(2);
-        if (randomNum == 1 && rooms_display(y, x) == 1)
-            gameboard_display(y, x) = grass_sprite;
+        if (randomNum == 1 && building_layer(y, x) == 1 && terrarian_layer(y, x) == 1)
+            object_layer(y, x) = grass_sprite;
         else
-            gameboard_display(y, x) = blank_sprite;
+            object_layer(y, x) = blank_sprite;
         end
     end
 end
 
-drawScene(my_scene,rooms_display,gameboard_display)
-
+% Updates the screen with the current scene
+drawScene(my_scene, terrarian_layer, object_layer, building_layer);
 
 
 %% Initalize Player
-player = player(player_sprite, 2, 2, my_scene, rooms_display, gameboard_display);
+player = player(player_sprite, 2, 2, my_scene, {terrarian_layer, object_layer, building_layer});
 player.initalize_character()
 
 %my_scene.showCreaturePopup(randTest.name, randTest.creature_texture);
