@@ -6,6 +6,7 @@ classdef player < handle
         y;
         scene;
         layers;
+        player_layer;
         last_floor_sprite;
     end
 
@@ -17,11 +18,21 @@ classdef player < handle
             player_obj.scene = scene;
             player_obj.layers = layers;
             player_obj.last_floor_sprite = 0;
+        
+            % Add a new top layer filled with blank tiles (1s)
+            player_obj.player_layer = length(layers) + 1;
+            new_layer = ones(20, 20);
+        
+            % Put player sprite at initial position
+            new_layer(y, x) = player_sprite;
+        
+            % Assign that as the new player layer
+            player_obj.layers{player_obj.player_layer} = new_layer;
         end
 
         %initalizes the character at the starting position
         function initalize_character(player_obj)
-            player_obj.layers{2}(player_obj.y, player_obj.x) = player_obj.player_sprite;
+            player_obj.layers{player_obj.player_layer}(player_obj.y, player_obj.x) = player_obj.player_sprite;
             drawScene(player_obj.scene, player_obj.layers{:});
         end
 
@@ -52,18 +63,17 @@ classdef player < handle
             end
         end
 
-        %updates the position of the player
         function update_position(player_obj, new_x, new_y)
 
             if player_obj.last_floor_sprite <= 0
                 player_obj.last_floor_sprite = 1;
             end
         
-            player_obj.layers{2}(player_obj.y, player_obj.x) = player_obj.last_floor_sprite;
+            player_obj.layers{player_obj.player_layer}(player_obj.y, player_obj.x) = player_obj.last_floor_sprite;
 
-            player_obj.last_floor_sprite = player_obj.layers{2}(new_y, new_x);
+            player_obj.last_floor_sprite = player_obj.layers{player_obj.player_layer}(new_y, new_x);
 
-            player_obj.layers{2}(new_y, new_x) = player_obj.player_sprite;
+            player_obj.layers{player_obj.player_layer}(new_y, new_x) = player_obj.player_sprite;
 
             drawScene(player_obj.scene, player_obj.layers{:});
 

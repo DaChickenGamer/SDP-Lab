@@ -114,10 +114,13 @@ classdef simpleGameEngine < handle
                     scene_data(rmin+1:rmin+obj.sprite_height, cmin+1:cmin+obj.sprite_width, :) = tile_data;
                 end
             end
-        
             % If figure doesn't exist, create it
             if isempty(obj.my_figure) || ~isvalid(obj.my_figure)
-                obj.my_figure = figure();
+                obj.my_figure = figure( ...
+                    'Name', 'TamerVille', ...
+                    'NumberTitle', 'off', ...
+                    'MenuBar', 'none', ...
+                    'ToolBar', 'none');
                 obj.my_image = imshow(scene_data, 'InitialMagnification', obj.zoom * 100);
             else
                 set(obj.my_image, 'CData', scene_data);
