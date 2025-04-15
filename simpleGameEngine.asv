@@ -157,7 +157,7 @@ classdef simpleGameEngine < handle
             %  2. The column of the tile clicked by the user
             %  3. (Optional) the button of the mouse used to click (1,2, or 3 for left, middle, and right, respectively)
             % 
-            % Notes: A set of “crosshairs” appear in the scene’s figure,
+            % Notes: A set of â€œcrosshairsâ€ appear in the sceneâ€™s figure,
             % and the program will pause until the user clicks on the
             % figure. It is possible to click outside the area of the
             % scene, in which case, the closest row and/or column is
@@ -197,10 +197,19 @@ classdef simpleGameEngine < handle
         end
 
         function uiPopup(obj, titleText, buttonLabel, imageData)
-            screenSize = get(obj.my_figure, 'Position');
-            panelWidth = screenSize(3);
-            panelHeight = screenSize(4);
+            % A popup that contains a title, button, and image
+            
+            % Callback function to close the UI panel and resume the game
+            function resumeGame(~, ~)
+                % Remove only the overlay panel, not the whole UI
+                delete(overlayPanel);
+            end
         
+            screenSize = get(gcf, 'Position');
+            panelWidth = screenSize(3);
+            panelHeight = screenSize(4); 
+        
+            % Main overlay panel with updated background color
             overlayPanel = uipanel('Parent', obj.my_figure, ...
                 'Units', 'normalized', ...
                 'Position', [0 0 1 1], ...
@@ -209,51 +218,42 @@ classdef simpleGameEngine < handle
                 'BorderType', 'none', ...
                 'BorderWidth', 0);
         
+            % Title label with improved font size and color
             uicontrol('Parent', overlayPanel, ...
                 'Style', 'text', ...
                 'String', titleText, ...
                 'Units', 'normalized', ...
-                'Position', [0.25 0.75 0.5 0.1], ...
-                'FontSize', 20, ...
+                'Position', [0.25 0.75 0.5 0.1], ...  
+                'FontSize', 20, ...  % Increased font size for better visibility
                 'FontWeight', 'bold', ...
-                'BackgroundColor', [0.2 0.2 0.2 0.8], ...
+                'BackgroundColor', [0 0 0 0], ...  
+                'ForegroundColor', [1 1 0], ...  % Yellow color for the title
                 'HorizontalAlignment', 'center');
         
-            imageHandle = [];
+            % Calculate center position for the image and make sure it scales
+            imageWidth = 200;  % Adjust size for better visibility
+            imageHeight = 200;  % Adjust size for better visibility
+            
+            xPos = (panelWidth - imageWidth) / 2; 
+            yPos = (panelHeight - imageHeight) / 2;
         
-            if exist('imageData', 'var') && ~isempty(imageData)
-                imageHandle = uiimage('Parent', overlayPanel, ...
-                    'ImageSource', imageData, ...
-                    'ScaleMethod', 'fit');
+            % Image scaling with "fit" method to scale the image properly
+            uiimage('Parent', overlayPanel, ...
+                'ImageSource', imageData, ...
+                'ScaleMethod', 'fit', ...  % Scaling method ensures the image fits well
+                'Position', [xPos, yPos, imageWidth, imageHeight]);
         
-                resizeImage();
-        
-                set(obj.my_figure, 'SizeChangedFcn', @resizeImage);
-            end
-        
-            % BUG: Image doesn't resize on the second popup
-            function resizeImage(~, ~)
-                if ishandle(imageHandle) && ishandle(overlayPanel)
-                    screenSize = get(obj.my_figure, 'Position');
-                    panelWidth = screenSize(3);
-                    panelHeight = screenSize(4);
-        
-                    imageWidth = 0.3 * panelWidth;
-                    imageHeight = 0.3 * panelHeight;
-                    xPos = (panelWidth - imageWidth) / 2;
-                    yPos = (panelHeight - imageHeight) / 2;
-        
-                    imageHandle.Position = [xPos, yPos, imageWidth, imageHeight];
-                end
-            end
-        
+            % Resume button with enhanced colors
             uicontrol('Parent', overlayPanel, ...
                 'Style', 'pushbutton', ...
                 'String', buttonLabel, ...
                 'Units', 'normalized', ...
-                'Position', [0.4 0.15 0.2 0.1], ...
-                'FontSize', 14, ...
-                'Callback', @(~,~) delete(overlayPanel));
+                'Position', [0.45 0.25 0.1 0.08], ...
+                'Callback', @resumeGame, ...
+                'FontSize', 16, ...  % Larger font size for the button
+                'BackgroundColor', [0.2 0.7 0.2], ...  % Green button for better contrast
+                'ForegroundColor', [1 1 1], ...  % White text for clarity
+                'FontWeight', 'bold');
         end
     end
 end

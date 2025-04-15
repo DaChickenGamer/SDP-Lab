@@ -146,7 +146,6 @@ end
 % Updates the screen with the current scene
 drawScene(my_scene, terrarian_layer, object_layer, building_layer);
 
-
 %% Initalize Player
 player = player(player_sprite, 2, 2, my_scene, {terrarian_layer, object_layer, building_layer});
 player.initalize_character()
@@ -157,7 +156,9 @@ randTest = creature_manager.roll_creature(creature_manager.creature_list);
 % Display random creature name
 fprintf("Random creature name: %s", randTest.name);
 
-my_scene.uiPopup(randTest.name, "Catch", my_scene.sprites{randTest.creature_texture})
+%my_scene.uiPopup(randTest.name, "Catch", my_scene.sprites{randTest.creature_texture})
+
+my_scene.uiPopup("TamerVille", "Start");
 
 while gameRunning
     player.move();
