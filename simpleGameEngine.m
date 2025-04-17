@@ -197,10 +197,30 @@ classdef simpleGameEngine < handle
         end
 
         function uiPopup(obj, titleText, buttonLabel, imageData)
+            % uiPopup
+            % Creates a UI popup overlay with a title, image, and button
+            % with interaction sounds. The overlay disappears once the button
+            % is clicked.
+        
+            % Get figure size
             screenSize = get(obj.my_figure, 'Position');
             panelWidth = screenSize(3);
             panelHeight = screenSize(4);
         
+            % Load interaction sounds
+            [hoverSound, hoverFs] = audioread('assets/InteractionMechanicA.wav');
+            if size(hoverSound, 2) > 1
+                hoverSound = mean(hoverSound, 2); % Convert to mono
+            end
+            hoverPlayer = audioplayer(hoverSound, hoverFs);
+            
+            [clickSound, clickFs] = audioread('assets/InteractionFasten.wav');
+            if size(clickSound, 2) > 1
+                clickSound = mean(clickSound, 2); % Convert to mono
+            end
+            clickPlayer = audioplayer(clickSound, clickFs);
+        
+            % Create the overlay panel
             overlayPanel = uipanel('Parent', obj.my_figure, ...
                 'Units', 'normalized', ...
                 'Position', [0 0 1 1], ...
@@ -209,6 +229,7 @@ classdef simpleGameEngine < handle
                 'BorderType', 'none', ...
                 'BorderWidth', 0);
         
+            % Create title text
             uicontrol('Parent', overlayPanel, ...
                 'Style', 'text', ...
                 'String', titleText, ...
@@ -219,19 +240,19 @@ classdef simpleGameEngine < handle
                 'BackgroundColor', [0.2 0.2 0.2 0.8], ...
                 'HorizontalAlignment', 'center');
         
+            % Handle image (optional)
             imageHandle = [];
-        
             if exist('imageData', 'var') && ~isempty(imageData)
                 imageHandle = uiimage('Parent', overlayPanel, ...
                     'ImageSource', imageData, ...
                     'ScaleMethod', 'fit');
         
+                % Resize image based on window size
                 resizeImage();
-        
                 set(obj.my_figure, 'SizeChangedFcn', @resizeImage);
             end
         
-            % BUG: Image doesn't resize on the second popup
+            % Function to resize image when window size changes
             function resizeImage(~, ~)
                 if ishandle(imageHandle) && ishandle(overlayPanel)
                     screenSize = get(obj.my_figure, 'Position');
@@ -247,13 +268,41 @@ classdef simpleGameEngine < handle
                 end
             end
         
-            uicontrol('Parent', overlayPanel, ...
+            % Create the button
+            button = uicontrol('Parent', overlayPanel, ...
                 'Style', 'pushbutton', ...
                 'String', buttonLabel, ...
                 'Units', 'normalized', ...
                 'Position', [0.4 0.15 0.2 0.1], ...
                 'FontSize', 14, ...
-                'Callback', @(~,~) delete(overlayPanel));
+                'Callback', @(~,~) onClick());
+        
+            % Hover detection function
+            set(obj.my_figure, 'WindowButtonMotionFcn', @onHover);
+        
+            % Callback for button click
+            function onClick()
+                play(clickPlayer);
+                delete(overlayPanel);
+                set(obj.my_figure, 'WindowButtonMotionFcn', []);
+            end
+        
+            % Callback for hover over button
+            function onHover(~, ~)
+                cursorPos = get(obj.my_figure, 'CurrentPoint');
+                btnPos = getpixelposition(button, true);
+        
+                if cursorPos(1) >= btnPos(1) && cursorPos(1) <= btnPos(1) + btnPos(3) && ...
+                   cursorPos(2) >= btnPos(2) && cursorPos(2) <= btnPos(2) + btnPos(4)
+                    persistent hoverPlayed;
+                    if isempty(hoverPlayed) || ~hoverPlayed
+                        play(hoverPlayer);
+                        hoverPlayed = true;
+                    end
+                else
+                    hoverPlayed = false;
+                end
+            end
         end
 
         function makeButton(title, x, y, callback)

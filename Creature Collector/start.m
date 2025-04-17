@@ -4,7 +4,7 @@ close all
 
 
 % Initialize scene
-my_scene = simpleGameEngine('assets/retro_pack.png',16,16,4, [109, 76, 65]);
+my_scene = simpleGameEngine('assets/retro_pack.png',16,16,4, [0,135,62]);
 
 %% Initialize Variables
 gameRunning = true;
@@ -118,10 +118,10 @@ fence.setBuildingSet(Set.Animal)
 castle.setBuildingCoordinates(18, 2);
 grave.setBuildingCoordinates(3, 7);
 boat.setBuildingCoordinates(18, 18);
-shrine.setBuildingCoordinates(3, 15);
+shrine.setBuildingCoordinates(3, 17);
 candle.setBuildingCoordinates(10, 10);
-house.setBuildingCoordinates(5, 12);
-fence.setBuildingCoordinates(12, 5);
+house.setBuildingCoordinates(4, 12);
+fence.setBuildingCoordinates(6, 4);
 
 % Place Buildings
 building_layer(castle.y, castle.x) = castle.sprite;
@@ -145,6 +145,7 @@ for x = 1:20
     end
 end
 
+
 % Castle Generation
 
 leftCastleWall = 14 * 32 + 17;
@@ -165,11 +166,150 @@ for x = 1:6
     end
 end
 
+
+
+% Diamond / Funny Area Generation
+diamondTexture = 4 * 32 + 24;
+
+% Fail safe if no diamonds generate
+oneDiamondPlaced = false;
+
+for x = 1:5
+    for y = 1:5
+        actualX = x + 7;
+        actualY = y + 7;
+
+        randomNum = randi(7);
+
+        if randomNum == 1 && building_layer(actualY, actualX) == 1
+            object_layer(actualY, actualX) = diamondTexture;
+            oneDiamondPlaced = true;
+        end
+    end
+end
+
+% Makes a fail safe so if no diamonds get placed it puts one 
+if oneDiamondPlaced == false
+    randomX = randi(5) + 7;
+    randomY = randi(5) + 7;
+   
+    % Makes sure the diamond isn't placed on the candle
+    if building_layer(randomX, randomY) == 1
+        object_layer(randomY, randomX) = diamondTexture;
+    else
+        object_layer(randomY, randomX - 1) = diamondTexture;
+    end
+end
+
+% Generates village area
+houseTexture = 20 * 32 + 5;
+
+for x = 1:5
+    for y = 1:5
+        actualX = x + 1;
+        actualY = y + 9;
+
+        if mod(x, 2) == 0 && mod(y, 2) == 0
+            object_layer(actualY, actualX) = houseTexture;
+        end
+    end
+end
+
+% Generate Shrine Area
+fireTexture = 10 * 32 + 16;
+
+% Fail safe if no fire generate
+oneFirePlaced = false;
+
+for x = 1:5
+    for y = 1:5
+        actualX = x;
+        actualY = y + 14;
+
+        randomNum = randi(5);
+
+        if randomNum == 1 && building_layer(actualY, actualX) == 1
+            object_layer(actualY, actualX) = fireTexture;
+            oneFirePlaced = true;
+        end
+    end
+end
+
+% Makes a fail safe so if no fire get placed it puts one 
+if oneFirePlaced == false
+    randomX = randi(7);
+    randomY = randi(7) + 14;
+   
+    % Makes sure the fire isn't placed on the candle
+    if building_layer(randomX, randomY) == 1
+        object_layer(randomY, randomX) = fireTexture;
+    else
+        object_layer(randomY, randomX - 1) = fireTexture;
+    end
+end
+
+% Generate Grave Area
+normalGrave = 14 * 32 + 1;
+crossGrave = 14 * 32 + 2;
+squareGrave = 14 * 32 + 3;
+
+% Fail safe if no grave generates
+oneGravePlaced = false;
+
+% Area: 5x5 around grave building at (3, 7)
+for x = 1:5
+    for y = 1:5
+        actualX = x + 1;  % Around column 3
+        actualY = y + 5;  % Around row 7
+
+        randomNum = randi(6); % Chance to spawn grave
+
+        if randomNum == 1 && building_layer(actualY, actualX) == 1
+            % Randomly choose one of the grave types
+            graveType = randi(3);
+            switch graveType
+                case 1
+                    object_layer(actualY, actualX) = normalGrave;
+                case 2
+                    object_layer(actualY, actualX) = crossGrave;
+                case 3
+                    object_layer(actualY, actualX) = squareGrave;
+            end
+            oneGravePlaced = true;
+        end
+    end
+end
+
+% Fail-safe grave if none placed
+if ~oneGravePlaced
+    fallbackX = randi(5) + 1;
+    fallbackY = randi(5) + 5;
+
+    if building_layer(fallbackY, fallbackX) == 1
+        object_layer(fallbackY, fallbackX) = crossGrave;
+    else
+        object_layer(fallbackY, max(1, fallbackX - 1)) = crossGrave;
+    end
+end
+
+% Generate Animal Area
+fenceTexture = 3 * 32 + 3; 
+
+for x = 1:9
+    actualX = x + 1;
+    actualY = 4;
+
+    if building_layer(actualY, actualX) == 1
+        object_layer(actualY, actualX) = fenceTexture;
+    end
+end
+
+
 % Updates the screen with the current scene
 drawScene(my_scene, terrarian_layer, object_layer, building_layer);
 
 %% Initalize Player
-player = player(player_sprite, 2, 2, my_scene, {terrarian_layer, object_layer, building_layer});
+player = player(8 * 32 + 19, 2, 2, my_scene, {terrarian_layer, object_layer, building_layer});
 player.initalize_character()
 
 
@@ -179,6 +319,21 @@ randTest = creature_manager.roll_creature(creature_manager.creature_list);
 fprintf("Random creature name: %s", randTest.name);
 
 %my_scene.uiPopup(randTest.name, "Catch", my_scene.sprites{randTest.creature_texture})
+
+% Instructions
+% UI System isn't the best but it's all I got to work with
+
+my_scene.uiPopup("Controls: Use WASD to move, E to search for creatures.", "Begin");
+
+my_scene.uiPopup("Tip: Track progress at unique buildings.", "Next");
+
+my_scene.uiPopup("4. Escape as quickly as possible once your rocket is ready!", "Next");
+
+my_scene.uiPopup("3. Finish building your village to unlock the rocket ship.", "Next");
+
+my_scene.uiPopup("2. Discover all unique creatures to complete special buildings.", "Next");
+
+my_scene.uiPopup("1. Search for creatures hidden in random blocks around the map.", "Next");
 
 my_scene.uiPopup("TamerVille", "Start");
 
