@@ -255,5 +255,9 @@ classdef simpleGameEngine < handle
                 'FontSize', 14, ...
                 'Callback', @(~,~) delete(overlayPanel));
         end
+
+        function makeButton(title, x, y, callback)
+            
+        end
     end
 end

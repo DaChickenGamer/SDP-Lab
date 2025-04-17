@@ -197,19 +197,10 @@ classdef simpleGameEngine < handle
         end
 
         function uiPopup(obj, titleText, buttonLabel, imageData)
-            % A popup that contains a title, button, and image
-            
-            % Callback function to close the UI panel and resume the game
-            function resumeGame(~, ~)
-                % Remove only the overlay panel, not the whole UI
-                delete(overlayPanel);
-            end
-        
-            screenSize = get(gcf, 'Position');
+            screenSize = get(obj.my_figure, 'Position');
             panelWidth = screenSize(3);
-            panelHeight = screenSize(4); 
+            panelHeight = screenSize(4);
         
-            % Main overlay panel with updated background color
             overlayPanel = uipanel('Parent', obj.my_figure, ...
                 'Units', 'normalized', ...
                 'Position', [0 0 1 1], ...
@@ -218,42 +209,55 @@ classdef simpleGameEngine < handle
                 'BorderType', 'none', ...
                 'BorderWidth', 0);
         
-            % Title label with improved font size and color
             uicontrol('Parent', overlayPanel, ...
                 'Style', 'text', ...
                 'String', titleText, ...
                 'Units', 'normalized', ...
-                'Position', [0.25 0.75 0.5 0.1], ...  
-                'FontSize', 20, ...  % Increased font size for better visibility
+                'Position', [0.25 0.75 0.5 0.1], ...
+                'FontSize', 20, ...
                 'FontWeight', 'bold', ...
-                'BackgroundColor', [0 0 0 0], ...  
-                'ForegroundColor', [1 1 0], ...  % Yellow color for the title
+                'BackgroundColor', [0.2 0.2 0.2 0.8], ...
                 'HorizontalAlignment', 'center');
         
-            % Calculate center position for the image and make sure it scales
-            imageWidth = 200;  % Adjust size for better visibility
-            imageHeight = 200;  % Adjust size for better visibility
-            
-            xPos = (panelWidth - imageWidth) / 2; 
-            yPos = (panelHeight - imageHeight) / 2;
+            imageHandle = [];
         
-            % Image scaling with "fit" method to scale the image properly
-            uiimage('Parent', overlayPanel, ...
-                'ImageSource', imageData, ...
-                'ScaleMethod', 'fit', ...  % Scaling method ensures the image fits well
-                'Position', [xPos, yPos, imageWidth, imageHeight]);
+            if exist('imageData', 'var') && ~isempty(imageData)
+                imageHandle = uiimage('Parent', overlayPanel, ...
+                    'ImageSource', imageData, ...
+                    'ScaleMethod', 'fit');
         
-            % Resume button with enhanced colors
+                resizeImage();
+        
+                set(obj.my_figure, 'SizeChangedFcn', @resizeImage);
+            end
+        
+            % BUG: Image doesn't resize on the second popup
+            function resizeImage(~, ~)
+                if ishandle(imageHandle) && ishandle(overlayPanel)
+                    screenSize = get(obj.my_figure, 'Position');
+                    panelWidth = screenSize(3);
+                    panelHeight = screenSize(4);
+        
+                    imageWidth = 0.3 * panelWidth;
+                    imageHeight = 0.3 * panelHeight;
+                    xPos = (panelWidth - imageWidth) / 2;
+                    yPos = (panelHeight - imageHeight) / 2;
+        
+                    imageHandle.Position = [xPos, yPos, imageWidth, imageHeight];
+                end
+            end
+        
             uicontrol('Parent', overlayPanel, ...
                 'Style', 'pushbutton', ...
                 'String', buttonLabel, ...
                 'Units', 'normalized', ...
-                'Position', [0.45 0.25 0.1 0.08], ...
-                'Callback', @resumeGame, ...
-                'FontSize', 16, ...  % Larger font size for the button
-                'BackgroundColor', [0.2 0.7 0.2], ...  % Green button for better contrast
-                'ForegroundColor', [1 1 1], ...  % White text for clarity
-                'FontWeight', 'bold');
+                'Position', [0.4 0.15 0.2 0.1], ...
+                'FontSize', 14, ...
+                'Callback', @(~,~) delete(overlayPanel));
+        end
+
+        function makeButton(title, x, y, callback)
+            
         end
     end
 end

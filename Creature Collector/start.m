@@ -77,6 +77,8 @@ cornerWater = 5 * 32 + 11;
 
 terrarian_layer(15, 15) = fullWater;
 
+% Water generation
+
 for x = 1:6
     for y = 1:6
         currentX = x + 14;
@@ -113,7 +115,7 @@ house.setBuildingSet(Set.Citizen);
 fence.setBuildingSet(Set.Animal)
 
 % Set Coordinates
-castle.setBuildingCoordinates(16, 2);
+castle.setBuildingCoordinates(18, 2);
 grave.setBuildingCoordinates(3, 7);
 boat.setBuildingCoordinates(18, 18);
 shrine.setBuildingCoordinates(3, 15);
@@ -139,6 +141,26 @@ for x = 1:20
             object_layer(y, x) = grass_sprite;
         else
             object_layer(y, x) = blank_sprite;
+        end
+    end
+end
+
+% Castle Generation
+
+leftCastleWall = 14 * 32 + 17;
+leftCornerCastleWall = 15 * 32 + 17;
+bottomCastleWall = 15 * 32 + 18;
+
+for x = 1:6
+    for y = 1:4
+        xPos = x + 14;
+
+        if xPos == 15 && y ~= 4
+            object_layer(y, xPos) = leftCastleWall;
+        elseif y == 4 && xPos == 15
+            object_layer(y, xPos) = leftCornerCastleWall;
+        elseif y == 4 && x ~= 15
+            object_layer(y, xPos) = bottomCastleWall;
         end
     end
 end

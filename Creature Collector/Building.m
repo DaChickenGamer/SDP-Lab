@@ -30,7 +30,7 @@ classdef Building < handle
         end
 
         function showUI(obj, creature_list)
-
+            
         end
 
         % Not the best way to do it but works for now
