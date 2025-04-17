@@ -9,6 +9,7 @@ classdef player < handle
         player_layer;
         last_floor_sprite;
         moveFrames;
+        inventory = Creature.empty;
     end
 
     methods
@@ -45,47 +46,28 @@ classdef player < handle
             drawScene(player_obj.scene, player_obj.layers{:});
         end
 
-        %handles movement using wasd
-function move(player_obj)
-    persistent lastKeyPressTime;  % Store last key press time
-    if isempty(lastKeyPressTime)
-        lastKeyPressTime = 0;  % Initialize if empty
-    end
-
-    k = getKeyboardInput(player_obj.scene);  % Get the key pressed
-
-    % Get the current time
-    currentTime = tic;
-
-    % Only process the key if enough time has passed since the last key press
-    if currentTime - lastKeyPressTime > 0.2  % 0.2 seconds cooldown
-        new_x = player_obj.x;
-        new_y = player_obj.y;
-
-        % Check the key and calculate new coordinates
-        try
-            if k == 'w' && player_obj.y - 1 > 0
-                new_y = player_obj.y - 1;
-            elseif k == 's' && player_obj.y + 1 < 21
-                new_y = player_obj.y + 1;
-            elseif k == 'a' && player_obj.x - 1 > 0
-                new_x = player_obj.x - 1;
-            elseif k == 'd' && player_obj.x + 1 < 21
-                new_x = player_obj.x + 1;
+        function move(player_obj, key)
+            new_x = player_obj.x;
+            new_y = player_obj.y;
+        
+            try
+                if key == 'w' && player_obj.y - 1 > 0
+                    new_y = player_obj.y - 1;
+                elseif key == 's' && player_obj.y + 1 < 21
+                    new_y = player_obj.y + 1;
+                elseif key == 'a' && player_obj.x - 1 > 0
+                    new_x = player_obj.x - 1;
+                elseif key == 'd' && player_obj.x + 1 < 21
+                    new_x = player_obj.x + 1;
+                end
+            catch
+                warning("Error with movement.");
             end
-        catch
-            warning("Error with movement.");
+        
+            if new_x ~= player_obj.x || new_y ~= player_obj.y
+                player_obj.update_position(new_x, new_y);
+            end
         end
-
-        % Update position if the player moved
-        if new_x ~= player_obj.x || new_y ~= player_obj.y
-            player_obj.update_position(new_x, new_y);
-        end
-
-        % Update the last key press time
-        lastKeyPressTime = currentTime;
-    end
-end
 
         function update_position(player_obj, new_x, new_y)
             if player_obj.last_floor_sprite <= 0
@@ -117,6 +99,10 @@ end
             player_obj.last_floor_sprite = underlying_tile;
             player_obj.x = new_x;
             player_obj.y = new_y;
+        end
+
+        function add_creature_to_inventory(obj, creature)
+            obj.inventory(end + 1) = creature;
         end
     end
 end

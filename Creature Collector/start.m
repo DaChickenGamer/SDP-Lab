@@ -312,14 +312,6 @@ drawScene(my_scene, terrarian_layer, object_layer, building_layer);
 player = player(8 * 32 + 19, 2, 2, my_scene, {terrarian_layer, object_layer, building_layer});
 player.initalize_character()
 
-
-% Test to see if the creature roll works
-randTest = creature_manager.roll_creature(creature_manager.creature_list);
-% Display random creature name
-fprintf("Random creature name: %s", randTest.name);
-
-%my_scene.uiPopup(randTest.name, "Catch", my_scene.sprites{randTest.creature_texture})
-
 % Instructions
 % UI System isn't the best but it's all I got to work with
 
@@ -337,7 +329,95 @@ my_scene.uiPopup("1. Search for creatures hidden in random blocks around the map
 
 my_scene.uiPopup("TamerVille", "Start");
 
+%% Helper Function to get Textures
+function textures = getTextures()
+    textures.leftCastleWall = 14 * 32 + 17;
+    textures.leftCornerCastleWall = 15 * 32 + 17;
+    textures.bottomCastleWall = 15 * 32 + 18;
+    textures.diamond = 4 * 32 + 24;
+    textures.fullWater = 5 * 32 + 9;
+    textures.rightEdgeWater = 5 * 32 + 10;
+    textures.upEdgeWater = 32 * 32 + 1;
+    textures.cornerWater = 5 * 32 + 11;
+    textures.normalGrave = 14 * 32 + 1;
+    textures.crossGrave = 14 * 32 + 2;
+    textures.squareGrave = 14 * 32 + 3;
+    textures.fire = 10 * 32 + 16;
+    textures.house = 20 * 32 + 5;
+    textures.fence = 3 * 32 + 3;
+end
+
+% Define the textures
+textures = getTextures();
+
+% When clicking E it searches for a creatures
+function searchForCreature(scene, player, key, object_layer, textures, creature_manager)
+    if key ~= 'e' 
+        return 
+    end
+
+    currentBlock = object_layer(player.y, player.x);
+    randomChance = randi(100);
+
+    % For testing
+    %fprintf("Searching at (%d, %d) - Chance: %d\n", player.x, player.y, randomChance);  % Debug
+
+    if randomChance > 20
+        scene.uiPopup("You search the area but find nothing...", "Keep looking");
+        return;
+    end
+
+    % Initialize empty rolled creature
+    rolled = [];
+
+    % Use the textures directly for the current block
+    switch(currentBlock)
+        case {textures.leftCornerCastleWall, textures.leftCastleWall, textures.bottomCastleWall}
+            rolled = creature_manager.roll_creature(Set.Medieval);
+        case textures.diamond
+            rolled = creature_manager.roll_creature(Set.Funny);
+        case {textures.fullWater, textures.rightEdgeWater, textures.upEdgeWater, textures.cornerWater}
+            rolled = creature_manager.roll_creature(Set.Water);
+        case {textures.normalGrave, textures.crossGrave, textures.squareGrave}
+            rolled = creature_manager.roll_creature(Set.Dead);
+        case textures.fire
+            rolled = creature_manager.roll_creature(Set.Evil);
+        case textures.house
+            rolled = creature_manager.roll_creature(Set.Citizen);
+        case textures.fence
+            rolled = creature_manager.roll_creature(Set.Animal);
+        otherwise
+            scene.uiPopup("There doesn't seem to be anything interesting here...", "Try somewhere else");
+            return;
+    end
+
+    % If a creature was successfully rolled, show it with the texture
+    if ~isempty(rolled)
+        % Check if the texture index is valid
+        if rolled.creature_texture > 0 && rolled.creature_texture <= length(scene.sprites)
+            scene.uiPopup(rolled.name, "Catch", scene.sprites{rolled.creature_texture});
+            player.add_creature_to_inventory(rolled)
+        else
+            scene.uiPopup("Error: Invalid texture index for creature.", "Error");
+        end
+    else
+        scene.uiPopup("You searched carefully, but nothing showed up...", "Unlucky");
+    end
+    
+    % Prints inventory for testing
+
+    %{
+    fprintf("Inventory: ");
+    for i = 1:length(player.inventory)
+        fprintf("%s ", player.inventory(i).name);
+    end
+    fprintf("\n");
+    %}
+end
+
 while gameRunning
-    player.move();
+    key = getKeyboardInput(my_scene);
+    player.move(key);
+    searchForCreature(my_scene, player, key, object_layer, textures, creature_manager);
 end
 

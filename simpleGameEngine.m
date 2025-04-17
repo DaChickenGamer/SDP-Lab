@@ -208,6 +208,10 @@ classdef simpleGameEngine < handle
             panelHeight = screenSize(4);
         
             % Load interaction sounds
+
+            % BUG: Sounds only play once
+
+            %{
             [hoverSound, hoverFs] = audioread('assets/InteractionMechanicA.wav');
             if size(hoverSound, 2) > 1
                 hoverSound = mean(hoverSound, 2); % Convert to mono
@@ -219,6 +223,7 @@ classdef simpleGameEngine < handle
                 clickSound = mean(clickSound, 2); % Convert to mono
             end
             clickPlayer = audioplayer(clickSound, clickFs);
+            %}
         
             % Create the overlay panel
             overlayPanel = uipanel('Parent', obj.my_figure, ...
@@ -277,17 +282,19 @@ classdef simpleGameEngine < handle
                 'FontSize', 14, ...
                 'Callback', @(~,~) onClick());
         
+            % Sounds broken atm 
             % Hover detection function
-            set(obj.my_figure, 'WindowButtonMotionFcn', @onHover);
+            %set(obj.my_figure, 'WindowButtonMotionFcn', @onHover);
         
             % Callback for button click
             function onClick()
-                play(clickPlayer);
+                %play(clickPlayer);
                 delete(overlayPanel);
                 set(obj.my_figure, 'WindowButtonMotionFcn', []);
             end
         
             % Callback for hover over button
+            %{
             function onHover(~, ~)
                 cursorPos = get(obj.my_figure, 'CurrentPoint');
                 btnPos = getpixelposition(button, true);
@@ -303,6 +310,7 @@ classdef simpleGameEngine < handle
                     hoverPlayed = false;
                 end
             end
+            %}
         end
 
         function makeButton(title, x, y, callback)

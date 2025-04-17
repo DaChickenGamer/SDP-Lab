@@ -11,12 +11,19 @@ classdef CreatureManager < handle
 
         end
 
-        function random_creature = roll_creature(obj, creatures)
-            weights = zeros(1, length(creatures));
+        function random_creature = roll_creature(obj, set)
+            % Filter creatures by the set provided
+            creaturesInSet = obj.creature_list([obj.creature_list.set] == set);
+        
+            if isempty(creaturesInSet)
+                error("No creatures found in the specified set: %s", set);
+            end
         
             % Assign weights based on rarity
-            for i = 1:length(creatures)
-                switch creatures(i).rarity
+            weights = zeros(1, length(creaturesInSet));
+            
+            for i = 1:length(creaturesInSet)
+                switch creaturesInSet(i).rarity
                     case Rarities.Common
                         weights(i) = 500;
                     case Rarities.Uncommon
@@ -28,12 +35,12 @@ classdef CreatureManager < handle
                     case Rarities.Legendary
                         weights(i) = 1;
                     otherwise
-                        warning("Invalid rarity for creature: %s", creatures(i).name);
+                        warning("Invalid rarity for creature: %s", creaturesInSet(i).name);
                         weights(i) = 0;
                 end
             end
         
-            % Compute cumulative sum and draw random index
+            % Compute cumulative sum and draw a random index
             totalWeight = sum(weights);
             if totalWeight == 0
                 error("No valid creatures to choose from.");
@@ -41,10 +48,11 @@ classdef CreatureManager < handle
         
             r = rand() * totalWeight;
             cumulativeWeight = 0;
-            for i = 1:length(creatures)
+            
+            for i = 1:length(creaturesInSet)
                 cumulativeWeight = cumulativeWeight + weights(i);
                 if r <= cumulativeWeight
-                    random_creature = creatures(i);
+                    random_creature = creaturesInSet(i);
                     return;
                 end
             end
