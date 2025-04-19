@@ -68,7 +68,13 @@ classdef CreatureManager < handle
         end
 
         function sortedCreatures = getCreaturesOfSet(obj, set)
-            
+            sortedCreatures = Creature.empty;
+
+            for i = 1:length(obj.creature_list)
+                if obj.creature_list(i).set == set
+                    sortedCreatures(end + 1) = obj.creature_list(i);
+                end
+            end
         end
     end
 end

@@ -144,7 +144,7 @@ classdef simpleGameEngine < handle
             % we don't exit on a mouse click instead.
             keydown = 0;
             while ~keydown
-                keydown = waitforbuttonpress;
+            keydown = waitforbuttonpress;
             end
             key = get(obj.my_figure,'CurrentKey');
         end

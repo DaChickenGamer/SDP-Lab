@@ -96,6 +96,8 @@ for x = 1:6
     end
 end
 
+building_manager = BuildingManager();
+
 % Define buildings
 castle = Building();
 grave = Building();
@@ -131,6 +133,15 @@ building_layer(shrine.y, shrine.x) = shrine.sprite;
 building_layer(candle.y, candle.x) = candle.sprite;
 building_layer(house.y, house.x) = house.sprite;
 building_layer(fence.y, fence.x) = fence.sprite;
+
+% Adds building to the building manager
+building_manager.add_building(castle);
+building_manager.add_building(grave);
+building_manager.add_building(boat);
+building_manager.add_building(shrine);
+building_manager.add_building(candle);
+building_manager.add_building(house);
+building_manager.add_building(fence);
 
 % Grass Generation
 
@@ -351,17 +362,44 @@ end
 textures = getTextures();
 
 % When clicking E it searches for a creatures
-function searchForCreature(scene, player, key, object_layer, textures, creature_manager)
+function searchForCreature(scene, player, key, object_layer, building_layer, textures, creature_manager, building_manager)
     if key ~= 'e' 
         return 
     end
 
+    persistent lastSearchedX;
+    persistent lastSearchedY;
+
+    if isempty(lastSearchedX) && isempty(lastSearchedY)
+        lastSearchedX = -1;
+        lastSearchedY = -1;
+    end
+
+    if lastSearchedX == player.x && lastSearchedY == player.y && building_layer(player.y, player.x) == 1
+        return
+    end
+
+    lastSearchedX = player.x;
+    lastSearchedY = player.y;
+
     currentBlock = object_layer(player.y, player.x);
+    currentSet = Set.None;
     randomChance = randi(100);
 
     % For testing
     %fprintf("Searching at (%d, %d) - Chance: %d\n", player.x, player.y, randomChance);  % Debug
 
+    % TODO: Get building from texture
+    for i = 1:length(building_manager.buildings)
+        if building_manager.buildings(i).sprite == building_layer(player.y, player.x)
+            currentSet = building_manager.buildings(i).set; 
+        end
+    end
+
+    if building_layer(player.y, player.x) ~= 1 && currentSet ~= Set.None
+        displaySetProgress(scene, player, creature_manager.getCreaturesOfSet(currentSet))
+        return
+    end
     if randomChance > 20
         scene.uiPopup("You search the area but find nothing...", "Keep looking");
         return;
@@ -387,8 +425,9 @@ function searchForCreature(scene, player, key, object_layer, textures, creature_
         case textures.fence
             rolled = creature_manager.roll_creature(Set.Animal);
         otherwise
-            scene.uiPopup("There doesn't seem to be anything interesting here...", "Try somewhere else");
-            return;
+            if building_layer(player.y, player.x) == 1
+                scene.uiPopup("There doesn't seem to be anything interesting here...", "Try somewhere else");
+            end
     end
 
     % If a creature was successfully rolled, show it with the texture
@@ -415,9 +454,17 @@ function searchForCreature(scene, player, key, object_layer, textures, creature_
     %}
 end
 
+% Feature: Add actually displaying the images later
+function displaySetProgress(scene, player, creaturesInSet)
+    %{
+    for i = 1:length(creaturesInSet)
+        fprintf(creaturesInSet(i).name);
+    end
+    %}
+end
+
 while gameRunning
     key = getKeyboardInput(my_scene);
     player.move(key);
-    searchForCreature(my_scene, player, key, object_layer, textures, creature_manager);
-end
-
+    searchForCreature(my_scene, player, key, object_layer, building_layer, textures, creature_manager, building_manager);
+end 
