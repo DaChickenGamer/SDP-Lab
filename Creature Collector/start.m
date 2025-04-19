@@ -20,6 +20,10 @@ player_sprite = 26;
 empty_room_sprite = 17;
 grass_sprite = 65;
 
+%% Timer Variables
+startTime = tic; % Start the timer
+timerText = '';   % Placeholder for timer text
+
 %% Creatures
 creature_manager = CreatureManager();
 
@@ -434,8 +438,29 @@ function searchForCreature(scene, player, key, object_layer, building_layer, tex
     if ~isempty(rolled)
         % Check if the texture index is valid
         if rolled.creature_texture > 0 && rolled.creature_texture <= length(scene.sprites)
-            scene.uiPopup(rolled.name, "Catch", scene.sprites{rolled.creature_texture});
-            player.add_creature_to_inventory(rolled)
+            if rolled.rarity == Rarities.Common
+                color = 'white'; % Gray for Common (hex value)
+                rarityString = ['Common ', rolled.name]; % Combine rarity with name
+            elseif rolled.rarity == Rarities.Uncommon
+                color = 'green'; % Green for Uncommon (hex value)
+                rarityString = ['Uncommon ', rolled.name]; % Combine rarity with name
+            elseif rolled.rarity == Rarities.Rare
+                color = 'blue'; % Blue for Rare (hex value)
+                rarityString = ['Rare ', rolled.name]; % Combine rarity with name
+            elseif rolled.rarity == Rarities.Epic
+                color = 'magenta'; % Purple for Epic (hex value)
+                rarityString = ['Epic ', rolled.name]; % Combine rarity with name
+            elseif rolled.rarity == Rarities.Legendary
+                color = 'yellow'; % Gold for Legendary (hex value)
+                rarityString = ['Legendary ', rolled.name]; % Combine rarity with name
+            else
+                color = 'black'; % Default white for Unknown rarity (hex value)
+                rarityString = ['Unknown ', rolled.name]; % Combine unknown rarity with name
+            end
+            
+            % Show the creature with the texture and assigned color
+            scene.uiPopup(rarityString, "Catch", color, scene.sprites{rolled.creature_texture});
+            player.add_creature_to_inventory(rolled);
         else
             scene.uiPopup("Error: Invalid texture index for creature.", "Error");
         end
@@ -464,7 +489,39 @@ function displaySetProgress(scene, player, creaturesInSet)
 end
 
 while gameRunning
-    key = getKeyboardInput(my_scene);
-    player.move(key);
-    searchForCreature(my_scene, player, key, object_layer, building_layer, textures, creature_manager, building_manager);
-end 
+    % Check for keypress without blocking
+    drawnow;  % Allow the figure to update
+
+    if waitforbuttonpress  % Non-blocking check for a key press
+        key = get(gcf, 'CurrentKey');  % Get the key pressed
+
+        % Check for movement keys: 'w', 'a', 's', 'd'
+        if any(strcmp(key, {'w', 'a', 's', 'd'}))
+            % Call the player.move function with the movement direction
+            player.move(key);
+        end
+
+        % Check for 'e' key for interaction (search for creature)
+        if strcmp(key, 'e')
+            % Perform the search for creature
+            searchForCreature(my_scene, player, key, object_layer, building_layer, textures, creature_manager, building_manager);
+        end
+    end
+
+    % Always update the timer regardless of player movement
+    elapsedTime = toc(startTime);  % Get time since game started
+    minutes = floor(elapsedTime / 60);
+    seconds = mod(floor(elapsedTime), 60);
+    timerText = sprintf('Time Played: %02d:%02d', minutes, seconds);
+
+    % Redraw the scene
+    drawScene(my_scene, player.layers{:});
+
+    % Display the timer on the screen
+    title(timerText, 'FontSize', 14, 'Color', 'white');
+
+    % Optionally, you can also use text() if you want the timer inside the scene:
+    % text(1, -1, timerText, 'Color', 'white', 'FontSize', 12); % adjust x/y based on your figure layout
+
+    pause(1/60);  % (~60 FPS)
+end

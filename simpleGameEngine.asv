@@ -120,7 +120,6 @@ classdef simpleGameEngine < handle
                     'Name', 'TamerVille', ...
                     'NumberTitle', 'off', ...
                     'MenuBar', 'none', ...
-                    ''
                     'ToolBar', 'none');
                 obj.my_image = imshow(scene_data, 'InitialMagnification', obj.zoom * 100);
             else
@@ -197,7 +196,7 @@ classdef simpleGameEngine < handle
             end
         end
 
-        function uiPopup(obj, titleText, buttonLabel, imageData)
+        function uiPopup(obj, titleText, titleColor, buttonLabel, imageData)
             % uiPopup
             % Creates a UI popup overlay with a title, image, and button
             % with interaction sounds. The overlay disappears once the button
@@ -234,6 +233,10 @@ classdef simpleGameEngine < handle
                 'Tag', 'gameUI', ...
                 'BorderType', 'none', ...
                 'BorderWidth', 0);
+
+            if isempty(titleColor)
+                titleColor == 
+            end
         
             % Create title text
             uicontrol('Parent', overlayPanel, ...
@@ -312,10 +315,6 @@ classdef simpleGameEngine < handle
                 end
             end
             %}
-        end
-
-        function makeButton(title, x, y, callback)
-            
         end
     end
 end

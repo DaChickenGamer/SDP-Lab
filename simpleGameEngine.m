@@ -196,7 +196,7 @@ classdef simpleGameEngine < handle
             end
         end
 
-        function uiPopup(obj, titleText, buttonLabel, imageData)
+        function uiPopup(obj, titleText, buttonLabel, titleColor, imageData)
             % uiPopup
             % Creates a UI popup overlay with a title, image, and button
             % with interaction sounds. The overlay disappears once the button
@@ -233,7 +233,17 @@ classdef simpleGameEngine < handle
                 'Tag', 'gameUI', ...
                 'BorderType', 'none', ...
                 'BorderWidth', 0);
+
+            % Set default value for titleColor if not provided
+            if nargin < 4 || isempty(titleColor)
+                titleColor = 'white';
+            end
         
+            % Set default value for imageData if not provided
+            if nargin < 5
+                imageData = [];
+            end
+            
             % Create title text
             uicontrol('Parent', overlayPanel, ...
                 'Style', 'text', ...
@@ -243,6 +253,7 @@ classdef simpleGameEngine < handle
                 'FontSize', 20, ...
                 'FontWeight', 'bold', ...
                 'BackgroundColor', [0.2 0.2 0.2 0.8], ...
+                'ForegroundColor', titleColor, ...
                 'HorizontalAlignment', 'center');
         
             % Handle image (optional)
@@ -311,10 +322,6 @@ classdef simpleGameEngine < handle
                 end
             end
             %}
-        end
-
-        function makeButton(title, x, y, callback)
-            
         end
     end
 end
