@@ -31,9 +31,9 @@ classdef CreatureManager < handle
                     case Rarities.Rare
                         weights(i) = 100;
                     case Rarities.Epic
-                        weights(i) = 20;
+                        weights(i) = 50;
                     case Rarities.Legendary
-                        weights(i) = 1;
+                        weights(i) = 20;
                     otherwise
                         warning("Invalid rarity for creature: %s", creaturesInSet(i).name);
                         weights(i) = 0;

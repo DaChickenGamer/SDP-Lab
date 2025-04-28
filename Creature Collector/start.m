@@ -404,9 +404,13 @@ function searchForCreature(scene, player, key, object_layer, building_layer, tex
         displaySetProgress(scene, player, creature_manager.getCreaturesOfSet(currentSet))
         return
     end
-    if randomChance > 20
+    if randomChance > 20 && object_layer(player.y, player.x) ~= 65
         scene.uiPopup("You search the area but find nothing...", "Keep looking");
         return;
+    end
+    
+    if building_layer(player.y, player.x) ~= 1
+        scene.uiPopup("Can't search buildings!", "Try somewhere else");
     end
 
     % Initialize empty rolled creature
@@ -428,10 +432,6 @@ function searchForCreature(scene, player, key, object_layer, building_layer, tex
             rolled = creature_manager.roll_creature(Set.Citizen);
         case textures.fence
             rolled = creature_manager.roll_creature(Set.Animal);
-        otherwise
-            if building_layer(player.y, player.x) == 1
-                scene.uiPopup("There doesn't seem to be anything interesting here...", "Try somewhere else");
-            end
     end
 
     % If a creature was successfully rolled, show it with the texture
@@ -465,7 +465,7 @@ function searchForCreature(scene, player, key, object_layer, building_layer, tex
             scene.uiPopup("Error: Invalid texture index for creature.", "Error");
         end
     else
-        scene.uiPopup("You searched carefully, but nothing showed up...", "Unlucky");
+        scene.uiPopup("Nothing seems to be here...", "Keep Looking");
     end
     
     % Prints inventory for testing
@@ -490,7 +490,6 @@ end
 
 while gameRunning
     % Check for keypress without blocking
-    drawnow;  % Allow the figure to update
 
     if waitforbuttonpress  % Non-blocking check for a key press
         key = get(gcf, 'CurrentKey');  % Get the key pressed
@@ -508,18 +507,9 @@ while gameRunning
         end
     end
 
-    % Always update the timer regardless of player movement
-    elapsedTime = toc(startTime);  % Get time since game started
-    minutes = floor(elapsedTime / 60);
-    seconds = mod(floor(elapsedTime), 60);
-    timerText = sprintf('Time Played: %02d:%02d', minutes, seconds);
-
     % Redraw the scene
     drawScene(my_scene, player.layers{:});
-
-    % Display the timer on the screen
-    title(timerText, 'FontSize', 14, 'Color', 'white');
-
+    
     % Optionally, you can also use text() if you want the timer inside the scene:
     % text(1, -1, timerText, 'Color', 'white', 'FontSize', 12); % adjust x/y based on your figure layout
 

@@ -49,10 +49,7 @@ classdef player < handle
         end
 
         function move(player_obj, key)
-            if player_obj.didMovement
-                return
-            end
-            player_obj.didMovement = true;
+            didMovement
 
             new_x = player_obj.x;
             new_y = player_obj.y;
@@ -74,8 +71,6 @@ classdef player < handle
             if new_x ~= player_obj.x || new_y ~= player_obj.y
                 player_obj.update_position(new_x, new_y);
             end
-
-            player_obj.didMovement = false;
         end
 
         function update_position(player_obj, new_x, new_y)
